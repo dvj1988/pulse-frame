@@ -26,7 +26,7 @@ describe('App', () => {
 
     const results = screen.getByTestId('event-list')
     expect(within(results).getAllByRole('article')).toHaveLength(1)
-    expect(within(results).getByText('submitted')).toBeInTheDocument()
+    expect(within(results).getByText(/submitted/)).toBeInTheDocument()
   })
 
   it('filters keepalives independently', async () => {
@@ -71,14 +71,24 @@ describe('App', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: /load example/i }))
 
-    await user.click(
-      screen.getAllByRole('button', { name: /collapse result object/i })[0],
-    )
+    // The JSON viewer exposes per-node fold toggles as icon-only controls
+    // rather than accessibly-named buttons, so we target the toggle for the
+    // first "result" node directly via its container.
+    const resultPair = screen.getAllByText('result')[0].closest('.json-view--pair')
+    const foldToggle = resultPair?.querySelector('.jv-size-chevron')
+    expect(foldToggle).toBeTruthy()
 
-    expect(screen.queryByText('submitted')).not.toBeInTheDocument()
-    expect(screen.getAllByText('jsonrpc')).toHaveLength(2)
-    expect(
-      screen.getByRole('button', { name: /expand result object/i }),
-    ).toHaveTextContent('5 keys')
+    await user.click(foldToggle as Element)
+
+    const results = within(screen.getByTestId('event-list'))
+    expect(results.queryByText(/submitted/)).not.toBeInTheDocument()
+    expect(results.getAllByText('jsonrpc')).toHaveLength(2)
+
+    const unfoldToggle = resultPair?.querySelector('.jv-button')
+    expect(unfoldToggle).toBeTruthy()
+
+    await user.click(unfoldToggle as Element)
+
+    expect(results.getByText(/submitted/)).toBeInTheDocument()
   })
 })

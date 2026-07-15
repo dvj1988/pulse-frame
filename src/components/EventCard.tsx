@@ -1,5 +1,5 @@
+import JsonView from 'react18-json-view'
 import type { ParsedSseEntry } from '../lib/parseSse'
-import { JsonView } from './JsonView'
 
 interface EventCardProps {
   entry: ParsedSseEntry
@@ -79,7 +79,12 @@ export function EventCard({
 
       <div className="event-body">
         {entry.jsonStatus === 'valid' ? (
-          <JsonView value={entry.parsed} expanded={expandAll} />
+          <JsonView
+            src={entry.parsed}
+            collapsed={!expandAll}
+            enableClipboard={false}
+            className="event-json-view"
+          />
         ) : (
           <>
             <p className="parse-error">{entry.parseError}</p>
