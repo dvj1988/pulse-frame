@@ -4,6 +4,18 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('App', () => {
+  it('links to the project repository from the navigation', () => {
+    render(<App />)
+
+    const repositoryLink = screen.getByRole('link', { name: /github/i })
+    expect(repositoryLink).toHaveAttribute(
+      'href',
+      'https://github.com/dvj1988/pulse-frame',
+    )
+    expect(repositoryLink).toHaveAttribute('target', '_blank')
+    expect(repositoryLink).toHaveAttribute('rel', 'noreferrer')
+  })
+
   it('makes the browser-only privacy guarantee explicit', () => {
     render(<App />)
 
