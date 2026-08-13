@@ -1,8 +1,22 @@
 # Pulseframe
 
-Pulseframe is a local-first stream inspector for pasted SSE, JSONL, and
-timestamp-prefixed structured logs. It turns each event or record into a
-searchable, collapsible JSON preview without uploading the input.
+> **Your data never leaves your browser.**
+
+Pulseframe is a client-side stream inspector for SSE, JSONL, and
+timestamp-prefixed structured logs. Paste sensitive production output and turn
+each event or record into a searchable, collapsible JSON preview without
+sending its contents to a server.
+
+## Browser-only by design
+
+Pasted data is held only in the page's in-memory React state and parsed in the
+browser. Pulseframe does not upload, persist, or analyze it on a server, and it
+does not use an API route, server action, analytics service, or browser storage
+for the input. Refreshing or closing the page clears it.
+
+The hosting server delivers the application files and may retain ordinary HTTP
+request metadata in its access logs, but the text pasted into Pulseframe is not
+part of those requests.
 
 ## Supported input
 
@@ -51,7 +65,7 @@ as the record payload.
 - Copy formatted JSON per record
 - SSE keepalive and metadata support
 - Responsive layout and keyboard-accessible controls
-- Entirely client-side parsing
+- Browser-only parsing—pasted data is never uploaded
 
 ## Run locally
 
