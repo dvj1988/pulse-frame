@@ -264,12 +264,32 @@ h2 {
   line-height: 1.7;
 }
 
-.input-label {
-  display: block;
+.input-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 9px;
+}
+
+.input-label {
   color: var(--ink);
   font-size: 0.76rem;
   font-weight: 750;
+}
+
+.example-button {
+  padding: 2px 0;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 1px dotted var(--line-strong);
+  background: transparent;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.example-button:not(:disabled):hover {
+  color: var(--indigo);
+  border-color: currentColor;
 }
 
 textarea {

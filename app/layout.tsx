@@ -4,9 +4,9 @@ import 'react18-json-view/src/style.css'
 import '../src/styles.css'
 
 export const metadata: Metadata = {
-  title: 'Pulseframe — SSE inspector',
+  title: 'Pulseframe — SSE & JSONL inspector',
   description:
-    'Parse pasted Server-Sent Events into a readable, collapsible JSON timeline.',
+    'Preview pasted Server-Sent Events and JSONL as readable, collapsible JSON.',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

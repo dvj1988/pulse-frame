@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import { EventCard } from './components/EventCard'
 import { sampleSse } from './data/sample'
-import { parseSse, type ParsedSseEntry } from './lib/parseSse'
+import { parseInput } from './lib/parseInput'
+import type { ParsedSseEntry } from './lib/parseSse'
 
 type FilterKey = 'data' | 'keepalives' | 'valid' | 'errors'
 
@@ -37,7 +38,8 @@ export default function App() {
     Record<number, 'copied' | 'error' | undefined>
   >({})
 
-  const entries = useMemo(() => parseSse(rawInput), [rawInput])
+  const parsedInput = useMemo(() => parseInput(rawInput), [rawInput])
+  const entries = parsedInput.entries
 
   const counts = useMemo(
     () => ({
@@ -97,7 +99,7 @@ export default function App() {
           <span>Pulseframe</span>
         </a>
         <p>
-          SSE inspector <span>/ local only</span>
+          SSE + JSONL inspector <span>/ local only</span>
         </p>
       </header>
 
@@ -112,13 +114,29 @@ export default function App() {
           </div>
 
           <p className="panel-intro">
-            Paste a raw <code>text/event-stream</code> response. Each SSE frame
-            becomes a separate, readable entry.
+            Paste a raw <code>text/event-stream</code> or JSONL response. Each
+            frame or record becomes a separate, readable entry.
           </p>
 
-          <label className="input-label" htmlFor="raw-stream">
-            Raw SSE stream
-          </label>
+          <div className="input-label-row">
+            <label className="input-label" htmlFor="raw-stream">
+              Raw response
+            </label>
+            <button
+              className="example-button"
+              type="button"
+              onClick={() => {
+                setRawInput(sampleSse)
+                setExpandAll(true)
+              }}
+              disabled={Boolean(rawInput)}
+              title={
+                rawInput ? 'Clear the input before loading the example' : undefined
+              }
+            >
+              Use sample SSE
+            </button>
+          </div>
           <textarea
             id="raw-stream"
             value={rawInput}
@@ -128,16 +146,6 @@ export default function App() {
           />
 
           <div className="input-actions">
-            <button
-              className="button button--primary"
-              type="button"
-              onClick={() => {
-                setRawInput(sampleSse)
-                setExpandAll(true)
-              }}
-            >
-              Load example
-            </button>
             <button
               className="button button--quiet"
               type="button"
@@ -150,11 +158,24 @@ export default function App() {
           </div>
 
           <aside className="protocol-note">
-            <strong>What you captured</strong>
+            <strong>
+              {parsedInput.format === 'jsonl'
+                ? 'JSONL detected'
+                : 'What you captured'}
+            </strong>
             <p>
-              An HTTP response streamed as Server-Sent Events. <code>data:</code>{' '}
-              carries payloads; lines beginning with <code>:</code> are
-              keepalive comments.
+              {parsedInput.format === 'jsonl' ? (
+                <>
+                  Each non-empty line is previewed as an independent JSON
+                  record.
+                </>
+              ) : (
+                <>
+                  An HTTP response streamed as Server-Sent Events. <code>data:</code>{' '}
+                  carries payloads; lines beginning with <code>:</code> are
+                  keepalive comments.
+                </>
+              )}
             </p>
           </aside>
         </section>
@@ -162,15 +183,21 @@ export default function App() {
         <section className="results-panel" aria-labelledby="results-title">
           <div className="results-heading">
             <div>
-              <p className="eyebrow">Timeline</p>
-              <h2 id="results-title">Decoded events</h2>
+              <p className="eyebrow">
+                {parsedInput.format === 'jsonl' ? 'Preview' : 'Timeline'}
+              </p>
+              <h2 id="results-title">
+                {parsedInput.format === 'jsonl' ? 'JSONL records' : 'Decoded events'}
+              </h2>
             </div>
             <div className="summary" aria-label="Stream summary">
               <span>{counts.total} total</span>
               <span>{counts.json} JSON</span>
-              <span>{counts.keepalives} keepalive</span>
+              {parsedInput.format !== 'jsonl' && (
+                <span>{counts.keepalives} keepalive</span>
+              )}
               <span className={counts.errors ? 'has-errors' : undefined}>
-                {counts.errors} errors
+                {counts.errors} {counts.errors === 1 ? 'error' : 'errors'}
               </span>
             </div>
           </div>
@@ -188,22 +215,27 @@ export default function App() {
             <div className="filter-row" aria-label="Event filters">
               {(
                 [
-                  ['data', 'Data'],
+                  ['data', parsedInput.format === 'jsonl' ? 'Records' : 'Data'],
                   ['keepalives', 'Keepalives'],
                   ['valid', 'Valid JSON'],
                   ['errors', 'Errors'],
                 ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className="filter-chip"
-                  aria-pressed={filters[key]}
-                  onClick={() => toggleFilter(key)}
-                >
-                  {label}
-                </button>
-              ))}
+              )
+                .filter(
+                  ([key]) =>
+                    key !== 'keepalives' || parsedInput.format !== 'jsonl',
+                )
+                .map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className="filter-chip"
+                    aria-pressed={filters[key]}
+                    onClick={() => toggleFilter(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
             </div>
             {hasVisibleJson && (
               <button
@@ -233,13 +265,13 @@ export default function App() {
               <span aria-hidden="true">∿</span>
               <h3>
                 {entries.length > 0
-                  ? 'No events match'
-                  : 'Paste an SSE response to begin'}
+                  ? `No ${parsedInput.format === 'jsonl' ? 'records' : 'events'} match`
+                  : 'Paste an SSE or JSONL response to begin'}
               </h3>
               <p>
                 {entries.length > 0
-                  ? 'Adjust your search or enable another event type.'
-                  : 'Your decoded event timeline will appear here.'}
+                  ? 'Adjust your search or enable another result type.'
+                  : 'Your decoded preview will appear here.'}
               </p>
             </div>
           )}

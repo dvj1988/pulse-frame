@@ -8,7 +8,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: /load example/i }))
+    await user.click(screen.getByRole('button', { name: /sample sse/i }))
 
     expect(screen.getByText('3 total')).toBeInTheDocument()
     expect(screen.getByText('2 JSON')).toBeInTheDocument()
@@ -20,7 +20,7 @@ describe('App', () => {
   it('searches payloads and metadata', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /load example/i }))
+    await user.click(screen.getByRole('button', { name: /sample sse/i }))
 
     await user.type(screen.getByRole('searchbox'), 'submitted')
 
@@ -32,7 +32,7 @@ describe('App', () => {
   it('filters keepalives independently', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /load example/i }))
+    await user.click(screen.getByRole('button', { name: /sample sse/i }))
 
     await user.click(screen.getByRole('button', { name: 'Keepalives' }))
 
@@ -44,19 +44,19 @@ describe('App', () => {
   it('clears input and results', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /load example/i }))
+    await user.click(screen.getByRole('button', { name: /sample sse/i }))
 
     await user.click(screen.getByRole('button', { name: /^clear$/i }))
 
-    expect(screen.getByRole('textbox', { name: /raw sse stream/i })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: /raw response/i })).toHaveValue('')
     expect(screen.queryAllByRole('article')).toHaveLength(0)
-    expect(screen.getByText(/paste an sse response/i)).toBeInTheDocument()
+    expect(screen.getByText(/paste an sse or jsonl response/i)).toBeInTheDocument()
   })
 
   it('collapses and expands every JSON node', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /load example/i }))
+    await user.click(screen.getByRole('button', { name: /sample sse/i }))
 
     expect(screen.getAllByText('jsonrpc')).toHaveLength(2)
     await user.click(screen.getByRole('button', { name: /collapse all/i }))
@@ -69,7 +69,7 @@ describe('App', () => {
   it('collapses an individual nested JSON node without hiding its siblings', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: /load example/i }))
+    await user.click(screen.getByRole('button', { name: /sample sse/i }))
 
     // The JSON viewer exposes per-node fold toggles as icon-only controls
     // rather than accessibly-named buttons, so we target the toggle for the
@@ -90,5 +90,29 @@ describe('App', () => {
     await user.click(unfoldToggle as Element)
 
     expect(results.getByText(/submitted/)).toBeInTheDocument()
+  })
+
+  it('previews JSONL records automatically and reports malformed lines', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('textbox', { name: /raw response/i }))
+    await user.paste('{"status":"ok"}\n{"count":2}\n{"broken":')
+
+    expect(screen.getByRole('heading', { name: /jsonl records/i })).toBeInTheDocument()
+    expect(screen.getByText('3 total')).toBeInTheDocument()
+    expect(screen.getByText('2 JSON')).toBeInTheDocument()
+    expect(screen.getByText('1 error')).toBeInTheDocument()
+    expect(screen.getByText(/invalid json on record 3/i)).toBeInTheDocument()
+  })
+
+  it('does not let the sample replace pasted input', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('textbox', { name: /raw response/i }))
+    await user.paste('{"mine":true}')
+
+    expect(screen.getByRole('button', { name: /sample sse/i })).toBeDisabled()
   })
 })
