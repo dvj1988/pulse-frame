@@ -40,6 +40,8 @@ export default function App() {
 
   const parsedInput = useMemo(() => parseInput(rawInput), [rawInput])
   const entries = parsedInput.entries
+  const isStructuredLog = parsedInput.format === 'structured-log'
+  const isRecordInput = parsedInput.format === 'jsonl' || isStructuredLog
 
   const counts = useMemo(
     () => ({
@@ -99,7 +101,7 @@ export default function App() {
           <span>Pulseframe</span>
         </a>
         <p>
-          SSE + JSONL inspector <span>/ local only</span>
+          Stream inspector <span>/ local only</span>
         </p>
       </header>
 
@@ -114,8 +116,8 @@ export default function App() {
           </div>
 
           <p className="panel-intro">
-            Paste a raw <code>text/event-stream</code> or JSONL response. Each
-            frame or record becomes a separate, readable entry.
+            Paste raw SSE, JSONL, or timestamped JSON logs. Each frame or record
+            becomes a separate, readable entry.
           </p>
 
           <div className="input-label-row">
@@ -159,12 +161,19 @@ export default function App() {
 
           <aside className="protocol-note">
             <strong>
-              {parsedInput.format === 'jsonl'
-                ? 'JSONL detected'
-                : 'What you captured'}
+              {isStructuredLog
+                ? 'Structured logs detected'
+                : parsedInput.format === 'jsonl'
+                  ? 'JSONL detected'
+                  : 'What you captured'}
             </strong>
             <p>
-              {parsedInput.format === 'jsonl' ? (
+              {isStructuredLog ? (
+                <>
+                  Each line’s outer timestamp is preserved while its JSON
+                  payload is previewed independently.
+                </>
+              ) : parsedInput.format === 'jsonl' ? (
                 <>
                   Each non-empty line is previewed as an independent JSON
                   record.
@@ -184,16 +193,20 @@ export default function App() {
           <div className="results-heading">
             <div>
               <p className="eyebrow">
-                {parsedInput.format === 'jsonl' ? 'Preview' : 'Timeline'}
+                {isRecordInput ? 'Preview' : 'Timeline'}
               </p>
               <h2 id="results-title">
-                {parsedInput.format === 'jsonl' ? 'JSONL records' : 'Decoded events'}
+                {isStructuredLog
+                  ? 'Structured logs'
+                  : parsedInput.format === 'jsonl'
+                    ? 'JSONL records'
+                    : 'Decoded events'}
               </h2>
             </div>
             <div className="summary" aria-label="Stream summary">
               <span>{counts.total} total</span>
               <span>{counts.json} JSON</span>
-              {parsedInput.format !== 'jsonl' && (
+              {!isRecordInput && (
                 <span>{counts.keepalives} keepalive</span>
               )}
               <span className={counts.errors ? 'has-errors' : undefined}>
@@ -215,7 +228,7 @@ export default function App() {
             <div className="filter-row" aria-label="Event filters">
               {(
                 [
-                  ['data', parsedInput.format === 'jsonl' ? 'Records' : 'Data'],
+                  ['data', isRecordInput ? 'Records' : 'Data'],
                   ['keepalives', 'Keepalives'],
                   ['valid', 'Valid JSON'],
                   ['errors', 'Errors'],
@@ -223,7 +236,7 @@ export default function App() {
               )
                 .filter(
                   ([key]) =>
-                    key !== 'keepalives' || parsedInput.format !== 'jsonl',
+                    key !== 'keepalives' || !isRecordInput,
                 )
                 .map(([key, label]) => (
                   <button
@@ -265,8 +278,8 @@ export default function App() {
               <span aria-hidden="true">∿</span>
               <h3>
                 {entries.length > 0
-                  ? `No ${parsedInput.format === 'jsonl' ? 'records' : 'events'} match`
-                  : 'Paste an SSE or JSONL response to begin'}
+                  ? `No ${isRecordInput ? 'records' : 'events'} match`
+                  : 'Paste an SSE, JSONL, or structured log response to begin'}
               </h3>
               <p>
                 {entries.length > 0

@@ -1,6 +1,6 @@
 import { parseSse, type ParsedSseEntry } from './parseSse'
 
-export type InputFormat = 'empty' | 'sse' | 'jsonl'
+export type InputFormat = 'empty' | 'sse' | 'jsonl' | 'structured-log'
 
 export interface ParsedInput {
   format: InputFormat
@@ -8,6 +8,7 @@ export interface ParsedInput {
 }
 
 const sseFieldPattern = /^(?:data|event|id|retry)(?::|$)/
+const timestampedJsonPattern = /^(\d{4}-\d{2}-\d{2}T\S+Z)\s+([\[{].*)$/
 
 export function parseInput(input: string): ParsedInput {
   const normalized = input.replace(/\r\n?/g, '\n')
@@ -21,15 +22,25 @@ export function parseInput(input: string): ParsedInput {
 
   if (isSse) return { format: 'sse', entries: parseSse(normalized) }
 
+  const isStructuredLog = nonEmptyLines.some((line) =>
+    timestampedJsonPattern.test(line.trim()),
+  )
+
   const entries = nonEmptyLines.map((line, index): ParsedSseEntry => {
-    const data = line.trim()
+    const trimmedLine = line.trim()
+    const timestampedMatch = isStructuredLog
+      ? trimmedLine.match(timestampedJsonPattern)
+      : null
+    const data = timestampedMatch?.[2] ?? trimmedLine
     const entry: ParsedSseEntry = {
       sequence: index + 1,
       kind: 'event',
       data,
       jsonStatus: 'invalid',
-      event: 'JSONL record',
-      unknownFields: [],
+      event: isStructuredLog ? 'Log entry' : 'JSONL record',
+      unknownFields: timestampedMatch
+        ? [{ field: 'stream timestamp', value: timestampedMatch[1] }]
+        : [],
     }
 
     try {
@@ -43,5 +54,5 @@ export function parseInput(input: string): ParsedInput {
     return entry
   })
 
-  return { format: 'jsonl', entries }
+  return { format: isStructuredLog ? 'structured-log' : 'jsonl', entries }
 }

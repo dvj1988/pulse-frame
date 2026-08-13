@@ -50,7 +50,9 @@ describe('App', () => {
 
     expect(screen.getByRole('textbox', { name: /raw response/i })).toHaveValue('')
     expect(screen.queryAllByRole('article')).toHaveLength(0)
-    expect(screen.getByText(/paste an sse or jsonl response/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/paste an sse, jsonl, or structured log response/i),
+    ).toBeInTheDocument()
   })
 
   it('collapses and expands every JSON node', async () => {
@@ -114,5 +116,25 @@ describe('App', () => {
     await user.paste('{"mine":true}')
 
     expect(screen.getByRole('button', { name: /sample sse/i })).toBeDisabled()
+  })
+
+  it('previews timestamp-prefixed structured logs', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('textbox', { name: /raw response/i }))
+    await user.paste(
+      '2026-08-13T04:58:52.056426394Z {"level":"INFO","message":"healthy"}',
+    )
+
+    expect(
+      screen.getByRole('heading', { name: /structured logs/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('stream timestamp 2026-08-13T04:58:52.056426394Z'))
+      .toBeInTheDocument()
+    expect(within(screen.getByTestId('event-list')).getByText(/healthy/))
+      .toBeInTheDocument()
+    expect(screen.getByText('1 JSON')).toBeInTheDocument()
+    expect(screen.queryByText(/invalid json/i)).not.toBeInTheDocument()
   })
 })
