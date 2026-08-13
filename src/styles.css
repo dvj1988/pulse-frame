@@ -258,10 +258,47 @@ h2 {
 
 .panel-intro {
   max-width: 50ch;
-  margin: 24px 0 22px;
+  margin: 24px 0 16px;
   color: var(--muted);
   font-size: 0.94rem;
   line-height: 1.7;
+}
+
+.privacy-promise {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 13px 14px;
+  margin-bottom: 20px;
+  color: #245f4b;
+  border: 1px solid rgb(40 122 92 / 22%);
+  border-radius: 11px;
+  background: rgb(40 122 92 / 7%);
+}
+
+.privacy-promise__mark {
+  display: grid;
+  flex: 0 0 auto;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--green);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.privacy-promise strong {
+  display: block;
+  font-size: 0.79rem;
+}
+
+.privacy-promise p {
+  margin: 3px 0 0;
+  color: #4f7467;
+  font-size: 0.71rem;
+  line-height: 1.45;
 }
 
 .input-label-row {

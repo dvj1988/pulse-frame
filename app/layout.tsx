@@ -6,7 +6,7 @@ import '../src/styles.css'
 export const metadata: Metadata = {
   title: 'Pulseframe — stream inspector',
   description:
-    'Preview pasted SSE, JSONL, and timestamped structured logs as readable JSON.',
+    'Inspect SSE, JSONL, and structured logs locally. Your data never leaves your browser.',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

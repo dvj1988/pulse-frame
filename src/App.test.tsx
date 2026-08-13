@@ -4,6 +4,16 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('App', () => {
+  it('makes the browser-only privacy guarantee explicit', () => {
+    render(<App />)
+
+    const privacy = screen.getByRole('complementary', { name: /privacy/i })
+    expect(within(privacy).getByText(/never leaves your browser/i))
+      .toBeInTheDocument()
+    expect(within(privacy).getByText(/nothing is uploaded or stored/i))
+      .toBeInTheDocument()
+  })
+
   it('loads an example and renders data events and keepalives separately', async () => {
     const user = userEvent.setup()
     render(<App />)

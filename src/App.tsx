@@ -112,13 +112,23 @@ export default function App() {
               <p className="eyebrow">Source</p>
               <h1 id="input-title">Paste the stream.</h1>
             </div>
-            <span className="privacy-note">Never uploaded</span>
+            <span className="privacy-note">Browser only</span>
           </div>
 
           <p className="panel-intro">
             Paste raw SSE, JSONL, or timestamped JSON logs. Each frame or record
             becomes a separate, readable entry.
           </p>
+
+          <aside className="privacy-promise" aria-label="Privacy">
+            <span className="privacy-promise__mark" aria-hidden="true">
+              ✓
+            </span>
+            <div>
+              <strong>Your data never leaves your browser.</strong>
+              <p>Parsed locally in this tab. Nothing is uploaded or stored.</p>
+            </div>
+          </aside>
 
           <div className="input-label-row">
             <label className="input-label" htmlFor="raw-stream">
